@@ -10,10 +10,13 @@ var MINIMUM_VIDEO_DURATION_SEC = 18;
 var REQUEST_DELAY_MSEC = 2000;
 var API_KEY = process.env.YT_API_KEY;
 
-function pad(num, size) {
-    var s = num + '';
-    while (s.length < size) s = '0' + s;
-    return s;
+function padList(start, end, size){
+    const numbers = [];
+    for (let i = start; i <= end; i++) {
+        const paddedNumber = i.toString().padStart(4, '0');
+        numbers.push(paddedNumber);
+    }
+    return numbers.join('|');
 }
 
 function parseVids(obj) {
@@ -37,14 +40,14 @@ function parseVids(obj) {
 function createQueries(startIndex, endIndex, tags) {
     queries = [];
     // construct queries to consume
-    for (var i = 0; i < tags.length; i++) {
-        var tag = tags[i];
-        var j = startIndex;
-        for (var j = endIndex; j >= startIndex; j--) {
-            var params = {};
-            params['q'] = '\"' + tag + ' ' + pad(j, 4) + '\"';
-            queries.push(params);
-        }
+    var blocksize = 25;
+    var numblocks = (endIndex-startIndex)/blocksize;
+    for (var b = 0; b < numblocks ; b++) {
+        var x = startIndex + blocksize * b;
+        var y = Math.min(startIndex + blocksize * (b+1) - 1, endIndex);
+        var params = {};
+        params['q'] = '\"' + tags.join('|') + ' ' + padList(x, y, 4) + '\"';
+        queries.push(params);
     }
     return queries;
 }
